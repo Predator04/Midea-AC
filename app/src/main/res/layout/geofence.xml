@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#111827">
+    <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:padding="20dp">
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Geofence" android:textSize="18sp" android:textStyle="bold" android:textColor="#FFFFFF"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Turns the AC off when you leave home, on when you return." android:textSize="13sp"
+            android:textColor="#9AA7BD" android:layout_marginTop="4dp"/>
+
+        <Button android:id="@+id/geo_set_home" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="📍 Set home = my current location" android:layout_marginTop="16dp"
+            android:backgroundTint="#2563eb" android:textColor="#FFFFFF"/>
+
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="20dp" android:gravity="center_vertical">
+            <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:text="Auto on/off" android:textSize="16sp" android:textColor="#FFFFFF"/>
+            <Switch android:id="@+id/geo_enabled"/>
+        </LinearLayout>
+
+        <LinearLayout android:orientation="horizontal" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center_vertical">
+            <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:text="Turn on when I arrive" android:textSize="16sp" android:textColor="#FFFFFF"/>
+            <Switch android:id="@+id/geo_auto_on"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Panel URL" android:textSize="12sp" android:textColor="#9AA7BD" android:layout_marginTop="20dp"/>
+        <EditText android:id="@+id/geo_url" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:inputType="textUri" android:textColor="#FFFFFF" android:background="#1f2937" android:padding="12dp"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Username" android:textSize="12sp" android:textColor="#9AA7BD" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/geo_user" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:inputType="text" android:textColor="#FFFFFF" android:background="#1f2937" android:padding="12dp"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Password" android:textSize="12sp" android:textColor="#9AA7BD" android:layout_marginTop="12dp"/>
+        <EditText android:id="@+id/geo_pass" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:inputType="textPassword" android:textColor="#FFFFFF" android:background="#1f2937" android:padding="12dp"/>
+    </LinearLayout>
+</ScrollView>

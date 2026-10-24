@@ -65,6 +65,7 @@ public class MainActivity extends Activity {
         menu.add(0, 1, 0, "Reload");
         menu.add(0, 2, 0, "Change URL");
         menu.add(0, 3, 0, "Check for updates");
+        menu.add(0, 4, 0, "Geofence");
         return true;
     }
 
@@ -73,6 +74,7 @@ public class MainActivity extends Activity {
         if (item.getItemId() == 1) { webView.reload(); return true; }
         if (item.getItemId() == 2) { showUrlDialog(); return true; }
         if (item.getItemId() == 3) { checkForUpdates(true); return true; }
+        if (item.getItemId() == 4) { startActivity(new Intent(this, GeofenceActivity.class)); return true; }
         return super.onOptionsItemSelected(item);
     }
 

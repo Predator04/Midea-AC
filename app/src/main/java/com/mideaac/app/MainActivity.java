@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -56,6 +57,7 @@ public class MainActivity extends Activity {
             }
         });
 
+        webView.clearCache(true);
         webView.loadUrl(prefs.getString("url", DEFAULT_URL));
         checkForUpdates(false);
     }

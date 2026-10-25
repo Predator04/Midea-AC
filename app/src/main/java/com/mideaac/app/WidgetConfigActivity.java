@@ -39,7 +39,7 @@ public class WidgetConfigActivity extends Activity {
                 .putString("pass", pass.getText().toString())
                 .putString("unit", unit.getText().toString().trim().toUpperCase())
                 .apply();
-            WidgetUpdateService.update(this, widgetId, false);
+            WidgetUpdateService.update(this, widgetId, ACWidgetProvider.ACTION_REFRESH);
             Intent ok = new Intent();
             ok.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
             setResult(RESULT_OK, ok);

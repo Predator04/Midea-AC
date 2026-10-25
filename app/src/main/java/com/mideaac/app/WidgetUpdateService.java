@@ -23,16 +23,17 @@ import java.util.Map;
 
 public class WidgetUpdateService {
 
-    static void update(Context ctx, int widgetId, boolean toggle) {
+    static void update(Context ctx, int widgetId, String action) {
         new Thread(() -> {
             SharedPreferences p = ctx.getSharedPreferences("widget", Context.MODE_PRIVATE);
             String base = p.getString("url", "http://192.168.1.8:8814");
             String user = p.getString("user", "");
             String pass = p.getString("pass", "");
+            String unit = p.getString("unit", "C");
 
             String cookie = login(base, user, pass);
             if (cookie == null) {
-                postRemote(ctx, widgetId, "—", "Sign in needed", false);
+                postRemote(ctx, widgetId, "--°", "--°", "Sign in needed", false);
                 return;
             }
 
@@ -40,51 +41,76 @@ public class WidgetUpdateService {
             try {
                 s = getState(base, cookie);
             } catch (Exception e) {
-                postRemote(ctx, widgetId, "—", "Offline", false);
+                postRemote(ctx, widgetId, "--°", "--°", "Offline", false);
                 return;
             }
 
             boolean power = s.optBoolean("power", false);
-            if (toggle) {
+            double targetC = s.optDouble("target_temp", 22);
+
+            if (ACWidgetProvider.ACTION_TOGGLE.equals(action)) {
                 try {
                     post(base, cookie, "{\"power\":" + (!power) + "}");
                     s = getState(base, cookie);
                     power = s.optBoolean("power", false);
+                    targetC = s.optDouble("target_temp", 22);
+                } catch (Exception ignored) {}
+            } else if (ACWidgetProvider.ACTION_TEMP_DOWN.equals(action) ||
+                       ACWidgetProvider.ACTION_TEMP_UP.equals(action)) {
+                try {
+                    double step = "F".equals(unit) ? 1.0 : 0.5;
+                    double disp = toDisplay(targetC, unit);
+                    disp += ACWidgetProvider.ACTION_TEMP_DOWN.equals(action) ? -step : step;
+                    double newC = toCelsius(disp, unit);
+                    post(base, cookie, "{\"temp\":" + newC + "}");
+                    s = getState(base, cookie);
+                    power = s.optBoolean("power", false);
+                    targetC = s.optDouble("target_temp", 22);
                 } catch (Exception ignored) {}
             }
 
             double indoor = s.optDouble("indoor_temp", 0);
-            String unit = p.getString("unit", "C");
-            double shown = "F".equals(unit) ? indoor * 9 / 5 + 32 : indoor;
-            String temp = Math.round(shown) + "°";
-            String label = power ? (s.optString("mode_name", "") + " · " + s.optString("fan_name", "")) : "Off";
-            postRemote(ctx, widgetId, temp, label, power);
+            String indoorStr = Math.round(toDisplay(indoor, unit)) + "°";
+            String targetStr = Math.round(toDisplay(targetC, unit)) + "°";
+            String label = power
+                    ? ("On · " + s.optString("mode_name", ""))
+                    : "Off";
+            postRemote(ctx, widgetId, indoorStr, targetStr, label, power);
         }).start();
     }
 
-    static void postRemote(Context ctx, int widgetId, String temp, String label, boolean power) {
+    static double toDisplay(double c, String unit) {
+        return "F".equals(unit) ? c * 9 / 5 + 32 : c;
+    }
+
+    static double toCelsius(double display, String unit) {
+        return "F".equals(unit) ? (display - 32) * 5 / 9 : display;
+    }
+
+    static void postRemote(Context ctx, int widgetId, String indoor, String target, String label, boolean power) {
         Handler h = new Handler(Looper.getMainLooper());
         h.post(() -> {
             AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
             RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.widget);
-            v.setTextViewText(R.id.wtemp, temp);
+            v.setTextViewText(R.id.wtemp, indoor);
+            v.setTextViewText(R.id.wtarget, target);
             v.setTextViewText(R.id.wlabel, label);
             v.setInt(R.id.wpower, "setBackgroundResource", power ? R.drawable.w_on : R.drawable.w_off);
 
-            Intent t = new Intent(ctx, ACWidgetProvider.class).setAction(ACWidgetProvider.ACTION_TOGGLE);
-            t.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
-            PendingIntent pi = PendingIntent.getBroadcast(ctx, widgetId, t,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            v.setOnClickPendingIntent(R.id.wpower, pi);
-
-            Intent r = new Intent(ctx, ACWidgetProvider.class).setAction(ACWidgetProvider.ACTION_REFRESH);
-            r.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
-            PendingIntent pr = PendingIntent.getBroadcast(ctx, widgetId + 1000, r,
-                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-            v.setOnClickPendingIntent(R.id.wtemp, pr);
+            v.setOnClickPendingIntent(R.id.wpower, actionPI(ctx, widgetId, ACWidgetProvider.ACTION_TOGGLE, 1));
+            v.setOnClickPendingIntent(R.id.wminus, actionPI(ctx, widgetId, ACWidgetProvider.ACTION_TEMP_DOWN, 2));
+            v.setOnClickPendingIntent(R.id.wplus, actionPI(ctx, widgetId, ACWidgetProvider.ACTION_TEMP_UP, 3));
+            v.setOnClickPendingIntent(R.id.wtemp, actionPI(ctx, widgetId, ACWidgetProvider.ACTION_REFRESH, 4));
 
             mgr.updateAppWidget(widgetId, v);
         });
+    }
+
+    static PendingIntent actionPI(Context ctx, int widgetId, String action, int req) {
+        Intent i = new Intent(ctx, ACWidgetProvider.class).setAction(action);
+        i.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        return PendingIntent.getBroadcast(ctx, widgetId * 10 + req, i,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     // ---- HTTP helpers (manual cookie handling) ----

@@ -17,6 +17,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -60,6 +63,12 @@ public class MainActivity extends Activity {
         webView.clearCache(true);
         webView.loadUrl(prefs.getString("url", DEFAULT_URL));
         checkForUpdates(false);
+        scheduleNotifications();
+    }
+
+    private void scheduleNotifications() {
+        PeriodicWorkRequest req = new PeriodicWorkRequest.Builder(NotifyWorker.class, 30, java.util.concurrent.TimeUnit.MINUTES).build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("notify", ExistingPeriodicWorkPolicy.REPLACE, req);
     }
 
     @Override
